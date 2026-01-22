@@ -10,7 +10,7 @@ import sys
 import time
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 import base64
 import platform
@@ -28,66 +28,6 @@ app.secret_key = os.urandom(24)
 # 配置
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "charts")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
-def setup_chinese_font():
-    """设置中文字体，兼容Windows和Linux"""
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import matplotlib.font_manager as fm
-    
-    system = platform.system()
-    font_name = None
-    font_path = None
-    
-    if system == 'Windows':
-        available_fonts = [f.name for f in fm.fontManager.ttflist]
-        for wf in ['Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS']:
-            if wf in available_fonts:
-                font_name = wf
-                break
-    
-    elif system == 'Darwin':
-        font_name = 'PingFang SC'
-    
-    else:
-        # Linux: 检查下载的字体文件
-        font_path = '/tmp/NotoSansSC-Regular.ttf'
-        if os.path.exists(font_path):
-            file_size = os.path.getsize(font_path)
-            if file_size < 1000:
-                # 文件太小，删除重新下载
-                os.remove(font_path)
-                font_path = None
-        
-        # 如果没有下载的字体，尝试系统字体
-        if not font_path:
-            for f in fm.fontManager.ttflist:
-                if 'noto' in f.name.lower() or 'cjk' in f.name.lower():
-                    font_name = f.name
-                    font_path = f.fname
-                    break
-        
-        # 如果都没有，使用默认字体
-        if not font_path:
-            font_name = 'DejaVu Sans'
-    
-    # 设置matplotlib字体
-    if font_path:
-        plt.rcParams['font.family'] = 'Noto Sans SC'
-        fm._load_fontmanager(try_read_cache=False)
-        try:
-            font_prop = fm.FontProperties(fname=font_path)
-            plt.rcParams['font.sans-serif'] = [font_prop.get_name()] + plt.rcParams.get('font.sans-serif', [])
-        except:
-            plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
-    elif font_name:
-        plt.rcParams['font.sans-serif'] = [font_name] + plt.rcParams.get('font.sans-serif', [])
-    
-    plt.rcParams['axes.unicode_minus'] = False
-    
-    return plt, font_name or 'system default'
 
 
 def get_stock_data_tencent(symbol):
@@ -166,14 +106,81 @@ def get_ttm_dividend(symbol):
         return {'ttm_dividend': 0, 'ttm_yield': 0}
 
 
+def get_chinese_font_path():
+    """获取中文字体路径，下载到本地"""
+    import requests
+    from urllib.request import urlretrieve
+    
+    font_path = '/tmp/wqy-microhei.ttc'
+    
+    # 如果字体文件不存在或太小，下载
+    if not os.path.exists(font_path) or os.path.getsize(font_path) < 1000:
+        try:
+            print("下载中文字体...")
+            # 使用 wqy-microhei 字体 (文泉驿微米黑)
+            url = 'https://github.com/AaronFeng753/Waifu2x-Extension-GUI/raw/master/SRC/Waifu2x-Extension-QT/wqy-microhei.ttc'
+            urlretrieve(url, font_path)
+            print("字体下载完成")
+        except Exception as e:
+            print(f"字体下载失败: {e}")
+            return None
+    
+    return font_path if os.path.exists(font_path) else None
+
+
+def setup_chinese_font():
+    """设置中文字体"""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    
+    system = platform.system()
+    
+    if system == 'Windows':
+        # Windows: 使用系统字体
+        available = [f.name for f in fm.fontManager.ttflist]
+        for wf in ['Microsoft YaHei', 'SimHei']:
+            if wf in available:
+                plt.rcParams['font.sans-serif'] = [wf]
+                break
+    else:
+        # Linux: 下载并使用中文字体
+        font_path = get_chinese_font_path()
+        if font_path:
+            fm.fontManager.addfont(font_path)
+            font_prop = fm.FontProperties(fname=font_path)
+            plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
+            plt.rcParams['axes.unicode_minus'] = False
+            print(f"使用字体: {font_prop.get_name()}")
+        else:
+            print("警告: 中文字体加载失败")
+    
+    return plt
+
+
 def generate_chart(results):
     """生成分析图表"""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
     
     # 设置中文字体
-    plt, _ = setup_chinese_font()
+    setup_chinese_font()
+    
+    # 获取字体用于图表
+    system = platform.system()
+    if system != 'Windows':
+        font_path = get_chinese_font_path()
+        font_prop = fm.FontProperties(fname=font_path) if font_path else None
+    else:
+        font_prop = None
+        available = [f.name for f in fm.fontManager.ttflist]
+        for wf in ['Microsoft YaHei', 'SimHei']:
+            if wf in available:
+                font_prop = fm.FontProperties(weight='bold')
+                break
     
     names = [r['name'] for r in results]
     f1_values = [r['roi_formula1'] for r in results]
@@ -227,7 +234,8 @@ def generate_chart(results):
     
     plt.tight_layout()
     
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    beijing_time = datetime.now() + timedelta(hours=8)
+    timestamp = beijing_time.strftime('%Y%m%d_%H%M%S')
     filename = f'chart_{timestamp}.png'
     filepath = os.path.join(OUTPUT_DIR, filename)
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
@@ -511,7 +519,7 @@ def api_query():
         return jsonify({
             'success': True,
             'results': results,
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            'timestamp': (datetime.now() + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
         })
     
     except Exception as e:
