@@ -1,0 +1,16 @@
+# Flask Web Framework
+Flask>=2.3.0
+gunicorn>=21.0.0
+
+# Data
+requests>=2.31.0
+akshare>=1.11.0
+matplotlib>=3.6.0
+
+# akshare dependencies
+decorator>=4.4.2
+jsonpath>=0.82
+tabulate>=0.8.6
+xlrd>=1.2.0
+py_mini_racer>=0.12.4
+curl_cffi>=0.6.0

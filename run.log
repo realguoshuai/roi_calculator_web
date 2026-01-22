@@ -1,0 +1,252 @@
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.72.63:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+127.0.0.1 - - [22/Jan/2026 13:12:34] "GET / HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1498, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1476, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "D:\code\git\roi_calculator_web\app.py", line 201, in index
+    return render_template('index.html', stocks=stocks)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 771, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "D:\code\git\roi_calculator_web\templates\index.html", line 144, in template
+    {% csrf_token %}
+jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'csrf_token'.
+127.0.0.1 - - [22/Jan/2026 13:12:34] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:12:34] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:12:34] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=lWliTj3UEKuK3XrASGbb HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:12:35] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:13:22] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:13:22] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [22/Jan/2026 13:13:26] "POST /query HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1498, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1476, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "D:\code\git\roi_calculator_web\app.py", line 210, in query
+    return render_template('result.html', error="请至少选择一只股票")
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 1087, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 771, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\Lenovo\AppData\Local\Programs\Python\Python38\lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "D:\code\git\roi_calculator_web\templates\result.html", line 133, in template
+    <td>{{ r.price|floatformat:2 }}</td>
+jinja2.exceptions.TemplateSyntaxError: expected token 'end of print statement', got ':'
+127.0.0.1 - - [22/Jan/2026 13:13:26] "GET /query?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:13:26] "GET /query?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:13:26] "GET /query?__debugger__=yes&cmd=resource&f=console.png&s=lWliTj3UEKuK3XrASGbb HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:13:27] "GET /query?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+D:\code\git\roi_calculator_web\app.py:135: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+D:\code\git\roi_calculator_web\app.py:145: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+D:\code\git\roi_calculator_web\app.py:168: UserWarning: Tight layout not applied. tight_layout cannot make axes height small enough to accommodate all axes decorations.
+  plt.tight_layout()
+127.0.0.1 - - [22/Jan/2026 13:14:17] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:14:17] "GET /static/charts/chart_20260122_131417.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:14:29] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:14:35] "GET / HTTP/1.1" 200 -
+ * Detected change in 'D:\\code\\git\\roi_calculator_web\\app.py', reloading
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+127.0.0.1 - - [22/Jan/2026 13:15:06] "GET / HTTP/1.1" 200 -
+D:\code\git\roi_calculator_web\app.py:135: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+D:\code\git\roi_calculator_web\app.py:145: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+D:\code\git\roi_calculator_web\app.py:168: UserWarning: Tight layout not applied. tight_layout cannot make axes height small enough to accommodate all axes decorations.
+  plt.tight_layout()
+127.0.0.1 - - [22/Jan/2026 13:15:11] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:15:11] "GET /static/charts/chart_20260122_131510.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:16:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:16:19] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:16:20] "GET /static/charts/chart_20260122_131618.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:17:03] "GET / HTTP/1.1" 200 -
+ * Detected change in 'D:\\code\\git\\roi_calculator_web\\app.py', reloading
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+获取财务数据失败: No module named 'akshare'
+获取TTM股息失败: No module named 'akshare'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+ * Detected change in 'D:\\code\\git\\roi_calculator_web\\app.py', reloading
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+ * Detected change in 'D:\\code\\git\\roi_calculator_web\\app.py', reloading
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+127.0.0.1 - - [22/Jan/2026 13:19:57] "GET / HTTP/1.1" 200 -
+D:\code\git\roi_calculator_web\app.py:135: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+D:\code\git\roi_calculator_web\app.py:145: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+D:\code\git\roi_calculator_web\app.py:168: UserWarning: Tight layout not applied. tight_layout cannot make axes height small enough to accommodate all axes decorations.
+  plt.tight_layout()
+127.0.0.1 - - [22/Jan/2026 13:20:36] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:20:36] "GET /static/charts/chart_20260122_132035.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:20:46] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:20:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:20:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:19] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:23] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:24] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:25] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:30] "POST /add_stock HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:37] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:22:37] "GET /static/charts/chart_20260122_132237.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:23:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:23:54] "GET / HTTP/1.1" 200 -
+D:\code\git\roi_calculator_web\app.py:135: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+D:\code\git\roi_calculator_web\app.py:145: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+D:\code\git\roi_calculator_web\app.py:168: UserWarning: Tight layout not applied. tight_layout cannot make axes height small enough to accommodate all axes decorations.
+  plt.tight_layout()
+127.0.0.1 - - [22/Jan/2026 13:23:58] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:23:58] "GET /static/charts/chart_20260122_132357.png HTTP/1.1" 200 -
+ * Detected change in 'D:\\code\\git\\roi_calculator_web\\app.py', reloading
+============================================================
+  ROI Calculator - Web Version
+  http://localhost:5000
+============================================================
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'py_mini_racer'
+获取TTM股息失败: No module named 'py_mini_racer'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+获取财务数据失败: No module named 'curl_cffi'
+获取TTM股息失败: No module named 'curl_cffi'
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 656-436-696
+127.0.0.1 - - [22/Jan/2026 13:26:01] "GET / HTTP/1.1" 200 -
+D:\code\git\roi_calculator_web\app.py:145: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+D:\code\git\roi_calculator_web\app.py:155: UserWarning: Attempting to set identical low and high ylims makes transformation singular; automatically expanding.
+  ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+D:\code\git\roi_calculator_web\app.py:178: UserWarning: Tight layout not applied. tight_layout cannot make axes height small enough to accommodate all axes decorations.
+  plt.tight_layout()
+127.0.0.1 - - [22/Jan/2026 13:26:06] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:26:06] "GET /static/charts/chart_20260122_132605.png HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:27:36] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:27:38] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:27:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:27:48] "POST /query HTTP/1.1" 200 -
+127.0.0.1 - - [22/Jan/2026 13:27:48] "GET /static/charts/chart_20260122_132747.png HTTP/1.1" 200 -
