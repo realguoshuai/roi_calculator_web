@@ -37,75 +37,57 @@ def setup_chinese_font():
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
     
-    font_name = None
-    
     system = platform.system()
+    font_name = None
+    font_path = None
     
     if system == 'Windows':
-        # Windows: 查找系统中的中文字体
-        windows_fonts = [
-            'Microsoft YaHei',
-            'Microsoft YaHei UI',
-            'SimHei',
-            'SimSun',
-            'PingFang SC',
-            'Noto Sans CJK SC',
-        ]
-        
-        # 获取所有可用字体
         available_fonts = [f.name for f in fm.fontManager.ttflist]
-        
-        for wf in windows_fonts:
+        for wf in ['Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS']:
             if wf in available_fonts:
                 font_name = wf
-                print(f"找到Windows字体: {wf}")
                 break
-        
-        # 如果没找到，尝试直接使用字体文件
-        if not font_name:
-            windows_font_paths = [
-                'C:\\Windows\\Fonts\\msyh.ttc',
-                'C:\\Windows\\Fonts\\msyh.ttc',
-                'C:\\Windows\\Fonts\\simhei.ttf',
-                'C:\\Windows\\Fonts\\simsun.ttc',
-            ]
-            for fp in windows_font_paths:
-                if os.path.exists(fp):
-                    font_name = fm.FontProperties(fname=fp).get_name()
-                    print(f"使用字体文件: {fp}")
-                    break
     
     elif system == 'Darwin':
-        # macOS
         font_name = 'PingFang SC'
     
     else:
-        # Linux (Railway等): 下载NotoSansSC字体
+        # Linux: 检查下载的字体文件
         font_path = '/tmp/NotoSansSC-Regular.ttf'
-        if not os.path.exists(font_path):
-            try:
-                print("下载中文字体...")
-                url = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.ttf'
-                response = requests.get(url, timeout=30)
-                with open(font_path, 'wb') as f:
-                    f.write(response.content)
-                print("字体下载完成")
-            except Exception as e:
-                print(f"字体下载失败: {e}")
-        
         if os.path.exists(font_path):
-            font_name = fm.FontProperties(fname=font_path).get_name()
-            print(f"使用Linux字体: {font_name}")
-        else:
+            file_size = os.path.getsize(font_path)
+            if file_size < 1000:
+                # 文件太小，删除重新下载
+                os.remove(font_path)
+                font_path = None
+        
+        # 如果没有下载的字体，尝试系统字体
+        if not font_path:
+            for f in fm.fontManager.ttflist:
+                if 'noto' in f.name.lower() or 'cjk' in f.name.lower():
+                    font_name = f.name
+                    font_path = f.fname
+                    break
+        
+        # 如果都没有，使用默认字体
+        if not font_path:
             font_name = 'DejaVu Sans'
     
     # 设置matplotlib字体
-    if font_name:
+    if font_path:
+        plt.rcParams['font.family'] = 'Noto Sans SC'
+        fm._load_fontmanager(try_read_cache=False)
+        try:
+            font_prop = fm.FontProperties(fname=font_path)
+            plt.rcParams['font.sans-serif'] = [font_prop.get_name()] + plt.rcParams.get('font.sans-serif', [])
+        except:
+            plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+    elif font_name:
         plt.rcParams['font.sans-serif'] = [font_name] + plt.rcParams.get('font.sans-serif', [])
-        plt.rcParams['axes.unicode_minus'] = False
-        print(f"当前使用字体: {font_name}")
     
-    return plt, font_name
+    plt.rcParams['axes.unicode_minus'] = False
+    
+    return plt, font_name or 'system default'
 
 
 def get_stock_data_tencent(symbol):
