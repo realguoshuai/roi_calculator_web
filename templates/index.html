@@ -223,8 +223,37 @@
             font-size: 12px;
         }
         @media (max-width: 768px) {
-            .stock-grid { grid-template-columns: 1fr 1fr; }
+            body { padding: 10px; }
+            header { padding: 20px; }
+            header h1 { font-size: 1.5em; }
+            main { padding: 20px; }
+            .stock-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card-content { padding: 12px; }
+            .stock-name { font-size: 0.95em; }
+            .stock-code { font-size: 0.8em; }
+            .btn { padding: 12px 25px; font-size: 1em; }
+            .form-row { flex-direction: column; }
+            .form-row input { min-width: 100%; }
+            .actions { flex-direction: column; gap: 10px; }
             .ranking-section { grid-template-columns: 1fr; }
+            .chart-container { padding: 10px; }
+            .chart-container img { width: 100%; height: auto; }
+            table { font-size: 0.85em; }
+            th, td { padding: 10px 5px; }
+            .ranking-card { padding: 15px; }
+            .add-stock-form, .rule-card { padding: 15px; }
+        }
+        
+        @media (max-width: 480px) {
+            header { padding: 15px; }
+            header h1 { font-size: 1.2em; }
+            main { padding: 15px; }
+            .stock-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .card-content { padding: 10px; }
+            .stock-name { font-size: 0.9em; }
+            .btn { padding: 10px 20px; font-size: 0.95em; }
+            h2 { font-size: 1.1em; }
+            .rule-list { flex-direction: column; gap: 8px; }
         }
     </style>
 </head>
@@ -311,6 +340,15 @@
     {% if message %}
     showToast('{{ message }}');
     {% endif %}
+    
+    // 防止重复提交
+    document.querySelector('form[action="/query"]').addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 查询中...';
+        }
+    });
     </script>
 </body>
 </html>
