@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-ROI Calculator Web - 腾讯云部署版
-Flask Web应用，支持在线查询和图表展示
+ROI Calculator Web - 投资回报率分析工具
+支持Windows和Linux部署
 """
 
 import os
@@ -13,13 +13,14 @@ import json
 from datetime import datetime
 from io import BytesIO
 import base64
+import platform
 
 # 添加当前目录到路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from roi import ROICalculator
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -27,6 +28,84 @@ app.secret_key = os.urandom(24)
 # 配置
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "charts")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+def setup_chinese_font():
+    """设置中文字体，兼容Windows和Linux"""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    
+    font_name = None
+    
+    system = platform.system()
+    
+    if system == 'Windows':
+        # Windows: 查找系统中的中文字体
+        windows_fonts = [
+            'Microsoft YaHei',
+            'Microsoft YaHei UI',
+            'SimHei',
+            'SimSun',
+            'PingFang SC',
+            'Noto Sans CJK SC',
+        ]
+        
+        # 获取所有可用字体
+        available_fonts = [f.name for f in fm.fontManager.ttflist]
+        
+        for wf in windows_fonts:
+            if wf in available_fonts:
+                font_name = wf
+                print(f"找到Windows字体: {wf}")
+                break
+        
+        # 如果没找到，尝试直接使用字体文件
+        if not font_name:
+            windows_font_paths = [
+                'C:\\Windows\\Fonts\\msyh.ttc',
+                'C:\\Windows\\Fonts\\msyh.ttc',
+                'C:\\Windows\\Fonts\\simhei.ttf',
+                'C:\\Windows\\Fonts\\simsun.ttc',
+            ]
+            for fp in windows_font_paths:
+                if os.path.exists(fp):
+                    font_name = fm.FontProperties(fname=fp).get_name()
+                    print(f"使用字体文件: {fp}")
+                    break
+    
+    elif system == 'Darwin':
+        # macOS
+        font_name = 'PingFang SC'
+    
+    else:
+        # Linux (Railway等): 下载NotoSansSC字体
+        font_path = '/tmp/NotoSansSC-Regular.ttf'
+        if not os.path.exists(font_path):
+            try:
+                print("下载中文字体...")
+                url = 'https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansSC-Regular.ttf'
+                response = requests.get(url, timeout=30)
+                with open(font_path, 'wb') as f:
+                    f.write(response.content)
+                print("字体下载完成")
+            except Exception as e:
+                print(f"字体下载失败: {e}")
+        
+        if os.path.exists(font_path):
+            font_name = fm.FontProperties(fname=font_path).get_name()
+            print(f"使用Linux字体: {font_name}")
+        else:
+            font_name = 'DejaVu Sans'
+    
+    # 设置matplotlib字体
+    if font_name:
+        plt.rcParams['font.sans-serif'] = [font_name] + plt.rcParams.get('font.sans-serif', [])
+        plt.rcParams['axes.unicode_minus'] = False
+        print(f"当前使用字体: {font_name}")
+    
+    return plt, font_name
 
 
 def get_stock_data_tencent(symbol):
@@ -65,21 +144,14 @@ def get_financial_data(symbol):
         else:
             akshare_code = symbol[2:] + ".SZ"
         
-        print(f"获取ROE: {symbol} -> {akshare_code}")
         df = ak.stock_financial_analysis_indicator_em(symbol=akshare_code)
-        print(f"  数据行数: {len(df)}")
         
         if len(df) > 0:
             annual_df = df[df['REPORT_TYPE'].str.contains('年报', na=False)]
-            print(f"  年报数据行数: {len(annual_df)}")
-            
             if len(annual_df) > 0:
                 latest = annual_df.iloc[0]
                 roe = float(latest.get('ROEJQ', 0)) if latest.get('ROEJQ') else 0
-                print(f"  ROE: {roe}")
                 return {'roe': roe}
-        
-        print(f"  未找到年报数据，返回ROE=0")
         return {'roe': 0}
     except Exception as e:
         print(f"获取财务数据失败: {e}")
@@ -91,10 +163,8 @@ def get_ttm_dividend(symbol):
     try:
         import akshare as ak
         
-        print(f"获取TTM股息: {symbol}")
         df = ak.stock_individual_spot_xq(symbol=symbol)
         data = dict(zip(df['item'], df['value']))
-        print(f"  数据项: {list(data.keys())}")
         
         ttm_dividend = 0
         ttm_yield = 0
@@ -102,10 +172,8 @@ def get_ttm_dividend(symbol):
         for item, value in data.items():
             if '股息(TTM)' in item:
                 ttm_dividend = float(value) if value else 0
-                print(f"  找到股息(TTM): {ttm_dividend}")
             elif '股息率(TTM)' in item:
                 ttm_yield = float(value) if value else 0
-                print(f"  找到股息率(TTM): {ttm_yield}")
         
         return {
             'ttm_dividend': round(ttm_dividend, 4),
@@ -117,13 +185,13 @@ def get_ttm_dividend(symbol):
 
 
 def generate_chart(results):
-    """生成分析图表，返回文件路径和base64"""
+    """生成分析图表"""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
-    plt.rcParams['axes.unicode_minus'] = False
+    # 设置中文字体
+    plt, _ = setup_chinese_font()
     
     names = [r['name'] for r in results]
     f1_values = [r['roi_formula1'] for r in results]
@@ -177,18 +245,13 @@ def generate_chart(results):
     
     plt.tight_layout()
     
-    # 保存到文件
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'chart_{timestamp}.png'
     filepath = os.path.join(OUTPUT_DIR, filename)
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
     
-    # 转换为base64
-    with open(filepath, 'rb') as f:
-        img_data = base64.b64encode(f.read()).decode('utf-8')
-    
-    return filename, img_data
+    return filename
 
 
 # ==================== 辅助函数 ====================
@@ -234,7 +297,7 @@ def apply_custom_roe(roe, symbol, rules):
         if rule['symbol'] == symbol:
             min_roe = float(rule['min_roe'])
             if roe < min_roe:
-                print(f"  应用自定义规则: {symbol} ROE {roe}% < {min_roe}%, 使用 {min_roe}%")
+                print(f"应用规则: {symbol} ROE {roe}% < {min_roe}%, 使用 {min_roe}%")
                 return min_roe
     return roe
 
@@ -252,11 +315,9 @@ def query():
     """查询股票ROI"""
     symbols = request.form.getlist('symbols')
     
-    # 加载股票配置
     config_stocks = get_stocks()
     rules = get_rules()
     
-    # 如果没有选择股票，分析全部
     if not symbols:
         symbols = [s['symbol'] for s in config_stocks]
     
@@ -297,7 +358,7 @@ def query():
             'symbol': symbol,
             'price': price,
             'roe': roe,
-            'original_roe': original_roe,  # 保留原始ROE用于显示
+            'original_roe': original_roe,
             'pb': pb,
             'dividend': ttm_dividend,
             'roi_formula1': result.roi_formula1,
@@ -305,14 +366,13 @@ def query():
         })
     
     if results:
-        chart_file, chart_base64 = generate_chart(results)
+        chart_file = generate_chart(results)
         sorted_by_f1 = sorted(results, key=lambda x: x['roi_formula1'], reverse=True)
         sorted_by_f2 = sorted(results, key=lambda x: x['roi_formula2'], reverse=True)
         
         return render_template('result.html', 
                              results=results,
                              chart_url=f'/static/charts/{chart_file}',
-                             chart_base64=chart_base64,
                              sorted_by_f1=sorted_by_f1,
                              sorted_by_f2=sorted_by_f2)
     
@@ -326,27 +386,21 @@ def add_stock():
     symbol = request.form.get('symbol', '').strip().upper()
     
     if not name or not symbol:
-        return render_template('index.html', stocks=get_stocks(), message="请填写股票名称和代码")
+        return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="请填写股票名称和代码")
     
-    # 验证股票代码格式
     if not symbol.startswith(('SZ', 'SH')):
-        return render_template('index.html', stocks=get_stocks(), message="股票代码必须以 SZ 或 SH 开头")
+        return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="股票代码必须以 SZ 或 SH 开头")
     
-    # 读取现有配置
     stocks = get_stocks()
     
-    # 检查是否已存在
     for s in stocks:
         if s['symbol'] == symbol:
-            return render_template('index.html', stocks=stocks, message=f"股票 {symbol} 已存在")
+            return render_template('index.html', stocks=stocks, rules=get_rules(), message=f"股票 {symbol} 已存在")
     
-    # 添加新股票
     stocks.append({'name': name, 'symbol': symbol})
-    
-    # 保存
     save_stocks(stocks)
     
-    return render_template('index.html', stocks=stocks, message=f"✅ 已添加 {name} ({symbol})")
+    return render_template('index.html', stocks=stocks, rules=get_rules(), message=f"已添加 {name} ({symbol})")
 
 
 @app.route('/delete_stock')
@@ -355,18 +409,16 @@ def delete_stock():
     symbol = request.args.get('symbol', '').strip()
     
     if not symbol:
-        return render_template('index.html', stocks=get_stocks(), message="股票代码不能为空")
+        return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="股票代码不能为空")
     
-    # 读取现有配置
     stocks = get_stocks()
     
-    # 查找并删除
     for i, s in enumerate(stocks):
         if s['symbol'] == symbol:
             name = s['name']
             del stocks[i]
             save_stocks(stocks)
-            return render_template('index.html', stocks=stocks, rules=get_rules(), message=f"✅ 已删除 {name} ({symbol})")
+            return render_template('index.html', stocks=stocks, rules=get_rules(), message=f"已删除 {name} ({symbol})")
     
     return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message=f"股票 {symbol} 不存在")
 
@@ -380,7 +432,6 @@ def add_rule():
     if not symbol or not min_roe:
         return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="请填写股票代码和最低ROE")
     
-    # 验证股票代码格式
     if not symbol.startswith(('SZ', 'SH')):
         return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="股票代码必须以 SZ 或 SH 开头")
     
@@ -389,21 +440,18 @@ def add_rule():
     except:
         return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="最低ROE必须为数字")
     
-    # 读取现有规则
     rules = get_rules()
     
-    # 检查是否已存在规则
     for rule in rules:
         if rule['symbol'] == symbol:
             rule['min_roe'] = min_roe
             save_rules(rules)
-            return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"✅ 已更新 {symbol} 最低ROE为 {min_roe}%")
+            return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"已更新 {symbol} 最低ROE为 {min_roe}%")
     
-    # 添加新规则
     rules.append({'symbol': symbol, 'min_roe': min_roe})
     save_rules(rules)
     
-    return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"✅ 已添加 {symbol} 最低ROE: {min_roe}%")
+    return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"已添加 {symbol} 最低ROE: {min_roe}%")
 
 
 @app.route('/delete_rule')
@@ -414,15 +462,13 @@ def delete_rule():
     if not symbol:
         return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message="股票代码不能为空")
     
-    # 读取现有规则
     rules = get_rules()
     
-    # 查找并删除
     for i, rule in enumerate(rules):
         if rule['symbol'] == symbol:
             del rules[i]
             save_rules(rules)
-            return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"✅ 已删除 {symbol} 的ROE规则")
+            return render_template('index.html', stocks=get_stocks(), rules=rules, message=f"已删除 {symbol} 的ROE规则")
     
     return render_template('index.html', stocks=get_stocks(), rules=get_rules(), message=f"规则 {symbol} 不存在")
 
@@ -439,6 +485,7 @@ def api_query():
         
         results = []
         calculator = ROICalculator()
+        rules = get_rules()
         
         for symbol in symbols:
             stock_data = get_stock_data_tencent(symbol)
@@ -453,6 +500,8 @@ def api_query():
             pb = stock_data['pb']
             ttm_yield = ttm_data['ttm_yield']
             ttm_dividend = ttm_data['ttm_dividend']
+            
+            roe = apply_custom_roe(roe, symbol, rules)
             
             stock_info = {
                 'name': stock_data['name'],
@@ -489,7 +538,8 @@ def api_query():
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("  ROI Calculator - Web Version")
-    print("  http://localhost:5000")
+    print(f"  ROI Calculator - Web Version")
+    print(f"  系统: {platform.system()}")
+    print(f"  访问: http://localhost:5000")
     print("=" * 60)
     app.run(host='0.0.0.0', port=5000, debug=True)
