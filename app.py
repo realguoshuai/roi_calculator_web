@@ -108,55 +108,75 @@ def get_ttm_dividend(symbol):
 
 def get_chinese_font_path():
     """获取中文字体路径，下载到本地"""
-    import requests
-    from urllib.request import urlretrieve
+    font_path = '/tmp/chinese_font.ttc'
     
-    font_path = '/tmp/wqy-microhei.ttc'
-    
-    # 如果字体文件不存在或太小，下载
-    if not os.path.exists(font_path) or os.path.getsize(font_path) < 1000:
-        try:
-            print("下载中文字体...")
-            # 使用 wqy-microhei 字体 (文泉驿微米黑)
-            url = 'https://github.com/AaronFeng753/Waifu2x-Extension-GUI/raw/master/SRC/Waifu2x-Extension-QT/wqy-microhei.ttc'
-            urlretrieve(url, font_path)
-            print("字体下载完成")
-        except Exception as e:
-            print(f"字体下载失败: {e}")
-            return None
+    if not os.path.exists(font_path) or os.path.getsize(font_path) < 100000:
+        font_urls = [
+            'https://github.com/anthonyho1/NotoSansCJK/raw/main/NotoSansCJK-Regular.ttc',
+            'https://raw.githubusercontent.com/anthonyho1/NotoSansCJK/main/NotoSansCJK-Regular.ttc',
+            'https://raw.githubusercontent.com/googlefonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf',
+        ]
+        
+        for url in font_urls:
+            try:
+                print(f"尝试下载字体: {url}")
+                response = requests.get(url, timeout=60)
+                if response.status_code == 200 and len(response.content) > 500000:
+                    with open(font_path, 'wb') as f:
+                        f.write(response.content)
+                    print(f"字体下载成功: {font_path} ({len(response.content)} bytes)")
+                    return font_path
+            except Exception as e:
+                print(f"下载失败 {url}: {e}")
+                continue
     
     return font_path if os.path.exists(font_path) else None
 
 
 def setup_chinese_font():
-    """设置中文字体"""
+    """设置中文字体，返回font_prop"""
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
     
     system = platform.system()
+    font_prop = None
     
     if system == 'Windows':
-        # Windows: 使用系统字体
         available = [f.name for f in fm.fontManager.ttflist]
         for wf in ['Microsoft YaHei', 'SimHei']:
             if wf in available:
                 plt.rcParams['font.sans-serif'] = [wf]
+                print(f"使用Windows系统字体: {wf}")
+                font_prop = fm.FontProperties(family=wf)
                 break
     else:
-        # Linux: 下载并使用中文字体
         font_path = get_chinese_font_path()
         if font_path:
-            fm.fontManager.addfont(font_path)
-            font_prop = fm.FontProperties(fname=font_path)
-            plt.rcParams['font.sans-serif'] = [font_prop.get_name()]
-            plt.rcParams['axes.unicode_minus'] = False
-            print(f"使用字体: {font_prop.get_name()}")
-        else:
-            print("警告: 中文字体加载失败")
+            try:
+                fm.fontManager.addfont(font_path)
+                font_prop = fm.FontProperties(fname=font_path)
+                font_name = font_prop.get_name()
+                plt.rcParams['font.sans-serif'] = [font_name]
+                plt.rcParams['axes.unicode_minus'] = False
+                print(f"使用字体: {font_name}")
+                
+                # 清除matplotlib缓存
+                import shutil
+                cache_dir = os.path.expanduser('~/.cache/matplotlib')
+                if os.path.exists(cache_dir):
+                    try:
+                        shutil.rmtree(cache_dir)
+                        print("已清除matplotlib字体缓存")
+                    except Exception as e:
+                        print(f"清除缓存失败: {e}")
+            except Exception as e:
+                print(f"字体注册失败: {e}")
+                import traceback
+                traceback.print_exc()
     
-    return plt
+    return font_prop
 
 
 def generate_chart(results):
@@ -166,21 +186,7 @@ def generate_chart(results):
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
     
-    # 设置中文字体
-    setup_chinese_font()
-    
-    # 获取字体用于图表
-    system = platform.system()
-    if system != 'Windows':
-        font_path = get_chinese_font_path()
-        font_prop = fm.FontProperties(fname=font_path) if font_path else None
-    else:
-        font_prop = None
-        available = [f.name for f in fm.fontManager.ttflist]
-        for wf in ['Microsoft YaHei', 'SimHei']:
-            if wf in available:
-                font_prop = fm.FontProperties(weight='bold')
-                break
+    font_prop = setup_chinese_font()
     
     names = [r['name'] for r in results]
     f1_values = [r['roi_formula1'] for r in results]
@@ -191,7 +197,15 @@ def generate_chart(results):
     colors = ['#4472C4', '#ED7D31', '#70AD47', '#FFC000', '#9BBB59']
     
     fig, axes = plt.subplots(2, 2, figsize=(14, 12))
-    fig.suptitle(f'ROI Analysis - {datetime.now().strftime("%Y-%m-%d %H:%M")}', 
+    
+    # 根据系统设置时间
+    system = platform.system()
+    if system == 'Windows':
+        current_time = datetime.now()
+    else:
+        # Linux服务器默认UTC时间，需要加8小时
+        current_time = datetime.now() + timedelta(hours=8)
+    fig.suptitle(f'ROI Analysis - {current_time.strftime("%Y-%m-%d %H:%M")}', 
                  fontsize=16, fontweight='bold')
     
     # 股息率
@@ -200,6 +214,9 @@ def generate_chart(results):
     ax1.set_title('ROI Formula 1: Dividend Yield (%)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Yield (%)')
     ax1.set_ylim(0, max(f1_values) * 1.3 if f1_values else 10)
+    if font_prop:
+        ax1.set_xticks(range(len(names)))
+        ax1.set_xticklabels(names, fontproperties=font_prop)
     for bar, val in zip(bars1, f1_values):
         ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
                 f'{val:.2f}%', ha='center', va='bottom', fontsize=10)
@@ -210,6 +227,9 @@ def generate_chart(results):
     ax2.set_title('ROI Formula 2: ROE/PB (%)', fontsize=12, fontweight='bold')
     ax2.set_ylabel('ROE/PB (%)')
     ax2.set_ylim(0, max(f2_values) * 1.3 if f2_values else 10)
+    if font_prop:
+        ax2.set_xticks(range(len(names)))
+        ax2.set_xticklabels(names, fontproperties=font_prop)
     for bar, val in zip(bars2, f2_values):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
                 f'{val:.2f}%', ha='center', va='bottom', fontsize=10)
@@ -219,6 +239,9 @@ def generate_chart(results):
     bars3 = ax3.bar(names, roes, color=colors[:len(names)])
     ax3.set_title('ROE (%)', fontsize=12, fontweight='bold')
     ax3.set_ylabel('ROE (%)')
+    if font_prop:
+        ax3.set_xticks(range(len(names)))
+        ax3.set_xticklabels(names, fontproperties=font_prop)
     for bar, val in zip(bars3, roes):
         ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
                 f'{val:.2f}%', ha='center', va='bottom', fontsize=10)
@@ -228,14 +251,16 @@ def generate_chart(results):
     bars4 = ax4.bar(names, prices, color=colors[:len(names)])
     ax4.set_title('Price (yuan)', fontsize=12, fontweight='bold')
     ax4.set_ylabel('Price (yuan)')
+    if font_prop:
+        ax4.set_xticks(range(len(names)))
+        ax4.set_xticklabels(names, fontproperties=font_prop)
     for bar, val in zip(bars4, prices):
         ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5, 
                 f'{val:.2f}', ha='center', va='bottom', fontsize=10)
     
     plt.tight_layout()
     
-    beijing_time = datetime.now() + timedelta(hours=8)
-    timestamp = beijing_time.strftime('%Y%m%d_%H%M%S')
+    timestamp = current_time.strftime('%Y%m%d_%H%M%S')
     filename = f'chart_{timestamp}.png'
     filepath = os.path.join(OUTPUT_DIR, filename)
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
@@ -516,10 +541,16 @@ def api_query():
                 'roi_formula2': result.roi_formula2,
             })
         
+        system = platform.system()
+        if system == 'Windows':
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            timestamp = (datetime.now() + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+        
         return jsonify({
             'success': True,
             'results': results,
-            'timestamp': (datetime.now() + timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+            'timestamp': timestamp
         })
     
     except Exception as e:
