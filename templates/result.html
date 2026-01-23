@@ -88,7 +88,27 @@
             color: #c00;
         }
         @media (max-width: 768px) {
+            body { padding: 10px; }
+            header { padding: 20px; }
+            header h1 { font-size: 1.5em; }
+            main { padding: 20px; }
+            .chart-container { padding: 10px; margin-bottom: 20px; }
+            .chart-container img { width: 100%; height: auto; }
+            table { font-size: 0.85em; }
+            th, td { padding: 10px 5px; }
             .ranking-section { grid-template-columns: 1fr; }
+            .ranking-card { padding: 15px; }
+            .btn { padding: 12px 25px; font-size: 1em; }
+            .actions { flex-direction: column; gap: 10px; }
+        }
+        
+        @media (max-width: 480px) {
+            header { padding: 15px; }
+            header h1 { font-size: 1.2em; }
+            main { padding: 15px; }
+            table { font-size: 0.75em; }
+            th, td { padding: 8px 3px; }
+            .btn { padding: 10px 20px; font-size: 0.95em; }
         }
     </style>
 </head>
