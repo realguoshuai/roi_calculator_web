@@ -12,7 +12,7 @@ import requests
 import logging
 import json
 from datetime import datetime 
-from roi import ROICalculator
+from roi import ROICalculator 
 
 # 设置编码
 if sys.platform == 'win32':
