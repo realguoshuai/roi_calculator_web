@@ -22,7 +22,7 @@ if sys.platform == 'win32':
 
 # 获取脚本所在目录，用于导入同目录下的模块
 if getattr(sys, 'frozen', False):
-    script_dir = os.path.dirname(sys.executable)
+    script_dir = os.path.dirname(sys.executable) 
 else:
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
